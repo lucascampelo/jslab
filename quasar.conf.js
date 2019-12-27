@@ -1,5 +1,6 @@
 // Configuration for your app
 // https://quasar.dev/quasar-cli/quasar-conf-js
+const path = require('path')
 
 module.exports = function (ctx) {
   return {
@@ -59,6 +60,7 @@ module.exports = function (ctx) {
       showProgress: true,
       gzip: false,
       analyze: false,
+      distDir: ctx.modeName === 'spa' ? path.join('docs') : path.join('dist', this.ctx.modeName),
       // Options below are automatically set depending on the env, set them if you want to override
       // preloadChunks: false,
       // extractCSS: false,
