@@ -6,11 +6,6 @@
           <q-icon name="videocam" />
           <span class="q-ml-md" v-text="!streamStarted ? 'Iniciar WebCam' : 'Parar WebCam'" />
         </q-btn>
-
-        <q-btn class="q-ml-sm" color="secondary" @click="flipCamera" :disabled="!streamStarted">
-          <q-icon name="flip_camera_android" />
-          <span class="q-ml-md">Flip</span>
-        </q-btn>
       </div>
     </div>
 
@@ -21,43 +16,54 @@
     </div>
 
     <div class="row flex-center q-mt-lg">
-      <video id="video" width="720" height="560" autoplay muted @dblclick="flipCamera" />
+      <div v-if="qrCodeResult" class="qrcode-result text-center">
+        <p>Resultado:</p>
+        <p v-text="qrCodeResult" />
+      </div>
+      <div class="video-wrapper" :class="{active: streamStarted}" style="width: 640px; height: 480px;">
+        <video id="video" width="100%" height="100%" autoplay muted />
+        <div class="qrcode-aim"></div>
+      </div>
     </div>
   </q-page>
 </template>
 
 <script>
+import QrScanner from 'qr-scanner/qr-scanner.min'
+// eslint-disable-next-line
+import QrScannerWorker from '!!file-loader!qr-scanner/qr-scanner-worker.min.js';
+QrScanner.WORKER_PATH = QrScannerWorker
+
 export default {
-  name: 'WebCam',
+  name: 'QrCode',
   data: () => ({
     streamStarted: false,
-    rearCamera: false,
-    errorMessage: null
+    errorMessage: null,
+    video: null,
+    qrScanner: null,
+    qrCodeResult: null
   }),
+  mounted () {
+    this.video = this.$el.querySelector('#video')
+  },
   methods: {
-    flipCamera () {
-      if (!this.streamStarted) {
-        return
-      }
-
-      this.rearCamera = !this.rearCamera
-      this.startVideo()
-    },
-    startVideo () {
+    async startVideo () {
       this.errorMessage = null
-      const video = this.$el.querySelector('#video')
+      this.qrCodeResult = null
       const videoConstraints = {
-        video: this.rearCamera ? { facingMode: { exact: 'environment' } } : {}
+        video: { facingMode: { exact: 'environment' } }
       }
 
       const videoStreamPromise = navigator.mediaDevices.getUserMedia(videoConstraints)
-      videoStreamPromise
+      await videoStreamPromise
         .then((stream) => {
+          this.video.srcObject = stream
           const { width, height } = stream.getVideoTracks()[0].getSettings()
-          video.width = width
-          video.height = height
-          video.srcObject = stream
+          this.video.parentElement.style.width = `${width}px`
+          this.video.parentElement.style.height = `${height}px`
           this.streamStarted = true
+          this.qrScanner = new QrScanner(this.video, result => (this.setResult(result)))
+          this.qrScanner.start()
         })
         .catch(err => {
           console.error(err, typeof err)
@@ -86,10 +92,40 @@ export default {
         })
     },
     stopVideo () {
-      const video = this.$el.querySelector('#video')
-      video.srcObject = null
+      this.qrScanner.stop()
+      this.qrScanner = null
+      this.video.srcObject = null
       this.streamStarted = false
+    },
+    setResult (result) {
+      this.qrCodeResult = result
+      this.stopVideo()
     }
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.video-wrapper {
+  position: relative;
+
+  .qrcode-aim {
+    width: 240px;
+    height: 240px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -120px;
+    margin-left: -120px;
+
+    border: 20px dashed rgba(0,0,0,0.2);
+    border-radius: 20px;
+    display: none;
+  }
+  &.active {
+    .qrcode-aim {
+      display: block;
+    }
+  }
+}
+</style>

@@ -38,6 +38,15 @@
             <q-item-label caption>navigator.mediaDevices.getUserMedia</q-item-label>
           </q-item-section>
         </q-item>
+        <q-item :to="{ name: 'qrcode' }">
+          <q-item-section avatar>
+            <q-icon name="mdi-qrcode" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>QrCode</q-item-label>
+            <q-item-label caption>Usando a câmera pra ler um QrCode</q-item-label>
+          </q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
 
