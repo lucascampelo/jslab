@@ -47,6 +47,15 @@
             <q-item-label caption>Usando a câmera pra ler um QrCode</q-item-label>
           </q-item-section>
         </q-item>
+        <q-item :to="{ name: 'webauthn' }">
+          <q-item-section avatar>
+            <q-icon name="mdi-fingerprint" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>WebAuthn</q-item-label>
+            <q-item-label caption>Autenticação passwordless da W3C</q-item-label>
+          </q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
 
