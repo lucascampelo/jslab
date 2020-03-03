@@ -40,6 +40,7 @@ export default {
     streamStarted: false,
     errorMessage: null,
     video: null,
+    stream: null,
     qrScanner: null,
     qrCodeResult: null
   }),
@@ -57,7 +58,7 @@ export default {
       const videoStreamPromise = navigator.mediaDevices.getUserMedia(videoConstraints)
       await videoStreamPromise
         .then((stream) => {
-          this.video.srcObject = stream
+          this.video.srcObject = this.stream = stream
           const { width, height } = stream.getVideoTracks()[0].getSettings()
           this.video.parentElement.style.width = `${width}px`
           this.video.parentElement.style.height = `${height}px`
@@ -92,8 +93,16 @@ export default {
         })
     },
     stopVideo () {
-      this.qrScanner.stop()
-      this.qrScanner = null
+      if (this.qrScanner) {
+        this.qrScanner.destroy()
+        this.qrScanner = null
+      }
+
+      if (this.stream) {
+        this.stream.getTracks().forEach(track => track.stop())
+        this.stream = null
+      }
+
       this.video.srcObject = null
       this.streamStarted = false
     },
@@ -101,6 +110,9 @@ export default {
       this.qrCodeResult = result
       this.stopVideo()
     }
+  },
+  beforeDestroy () {
+    this.stopVideo()
   }
 }
 </script>
